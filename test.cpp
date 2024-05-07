@@ -9,6 +9,8 @@ using namespace al;
 #include <iostream>
 using namespace std;
 
+#include "Gimmel/include/amplitude-domain/Compressor.hpp"
+
 // handy functions in audio
 float dBtoA (float dBVal) {return powf(10.f, dBVal / 20.f);}
 float ampTodB (float ampVal) {return 20.f * log10f(fabs(ampVal));}
@@ -46,9 +48,14 @@ protected:
 struct Basic_IO : public App {
   Parameter volControl{"volControl", "", 0.f, -96.f, 6.f};
   Parameter rmsMeter{"rmsMeter", "", -96.f, -96.f, 0.f};
+  Parameter thresh{"thresh", "", 0.f, -96.f, 0.f};
+  Parameter ratio{"ratio", "", 1.f, 1.f, 20.f};
+  Parameter attack{"attack", "", 10.f, 1.f, 50.f};
+  Parameter release{"release", "", 50.f, 1.f, 200.f};
   ParameterBool audioOutput{"audioOutput", "", false, 0.f, 1.f};
 
   Oscilliscope scope{static_cast<int>(AudioIO().framesPerSecond())};
+  giml::Compressor<float> myComp{static_cast<int>(AudioIO().framesPerSecond())};
 
   void onInit() {
     // set up GUI
@@ -56,13 +63,20 @@ struct Basic_IO : public App {
     auto &gui = GUIdomain->newGUI();
     gui.add(volControl); // add parameter to GUI
     gui.add(rmsMeter);
-    gui.add(audioOutput); 
+    gui.add(thresh); 
+    gui.add(ratio); 
+    gui.add(attack); 
+    gui.add(release); 
   }
 
   void onCreate() {}
 
   void onAnimate(double dt) {
     scope.update();
+    myComp.setThreshold(thresh);
+    myComp.setRatio(ratio);
+    myComp.setAttackTime(attack);
+    myComp.setReleaseTime(release);
   }
 
   bool onKeyDown(const Keyboard &k) override {
@@ -84,8 +98,12 @@ struct Basic_IO : public App {
       float input = io.in(0);
 
       // transform input for output (put your DSP here!)
-      float output = input * volFactor * audioOutput; 
+      float output = input;
+      if (audioOutput) {
+        float output = myComp.processSample(input);
+      }
       // float output = g(f(input)) etc... 
+      //float output = input * volFactor * audioOutput; 
 
       // for each channel, write output to speaker
       for (int channel = 0; channel < io.channelsOut(); channel++) {
@@ -121,8 +139,8 @@ int main() {
   
   // Allows for manual declaration of input and output devices, 
   // but causes unpredictable behavior. Needs investigation.
-  app.audioIO().deviceIn(AudioDevice("Microphone")); // change for your device
-  app.audioIO().deviceOut(AudioDevice("Speakers")); // change for your device
+  app.audioIO().deviceIn(AudioDevice("MacBook Pro Microphone")); // change for your device
+  app.audioIO().deviceOut(AudioDevice("BH+Speakers")); // change for your device
   cout << "outs: " << app.audioIO().channelsOutDevice() << endl;
   cout << "ins: " << app.audioIO().channelsInDevice() << endl;
   app.configureAudio(48000, 128, app.audioIO().channelsOutDevice(), app.audioIO().channelsInDevice());

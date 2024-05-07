@@ -1,4 +1,4 @@
-# Running on Windows:
+# Running on Windows/MacOS:
 
 1. First clone the `allolib_playground` library [here](https://github.com/AlloSphere-Research-Group/allolib_playground).
 Make sure you can use 
