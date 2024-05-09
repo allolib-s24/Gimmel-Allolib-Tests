@@ -16,7 +16,7 @@ using namespace std;
 float dBtoA(float dBVal) { return powf(10.f, dBVal / 20.f); }
 float ampTodB(float ampVal) { return 20.f * log10f(fabs(ampVal)); }
 
-#define CIRCLE //Use this to toggle between old oscilloscope implementation and new oscilloscope implementation
+//#define CIRCLE //Use this to toggle between old oscilloscope implementation and new oscilloscope implementation
 
 #ifdef CIRCLE
 //#include <mutex>
@@ -79,7 +79,7 @@ public:
 };
 
 // app struct
-struct Basic_IO : public App {
+struct Gimmel_Test : public App {
 	Parameter volControl{ "volControl", "", 0.f, -96.f, 6.f };
 	Parameter rmsMeter{ "rmsMeter", "", -96.f, -96.f, 0.f };
 
@@ -228,7 +228,7 @@ int main() {
 	//} //Breakpoint here per iteration to see where new value inserted
 
 
-	Basic_IO app; // instance of our app 
+	Gimmel_Test app; // instance of our app 
 
 	// Allows for manual declaration of input and output devices, 
 	// but causes unpredictable behavior. Needs investigation.

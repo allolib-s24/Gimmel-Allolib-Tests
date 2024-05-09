@@ -9,7 +9,8 @@ using namespace al;
 #include <iostream>
 using namespace std;
 
-#include "Gimmel/include/utility.hpp"
+#include "../Gimmel/include/modulation/Tremolo.hpp"
+#include "Gamma/SamplePlayer.h"
 
 // handy functions in audio
 float dBtoA (float dBVal) {return powf(10.f, dBVal / 20.f);}
@@ -22,37 +23,38 @@ public:
     this->primitive(Mesh::LINE_STRIP);
     for (int i = 0; i < bufferSize; i++) {
       this->vertex((i / static_cast<float>(bufferSize)) * 2.f - 1.f, 0);
-      buffer.push_back(0.f);
     }
   }
 
   void writeSample (float sample) {
-    for (int i = 0; i < bufferSize - 1; i++) {
-      buffer[i] = buffer[i + 1];
-    }
-    buffer[bufferSize - 1] = sample;
+    buffer.writeSample(sample);
   }
 
   void update() {
     for (int i = 0; i < bufferSize; i++) {
-      this->vertices()[i][1] = buffer[i];
+      this->vertices()[i][1] = buffer.readSample(bufferSize - i);
     }
   }
     
 protected:
   int bufferSize;
-  vector<float> buffer;
+  giml::JoelsCircularBuffer buffer;
 };
 
 // app struct
-struct Basic_IO : public App {
+struct Tremolo_Test : public App {
   Parameter volControl{"volControl", "", 0.f, -96.f, 6.f};
   Parameter rmsMeter{"rmsMeter", "", -96.f, -96.f, 0.f};
-  Parameter oscFreq{"oscFreq", "", 1, -100.f, 100.f};
+  Parameter thresh{"thresh", "", 0.f, -96.f, 0.f};
+  Parameter ratio{"ratio", "", 1.f, 1.f, 20.f};
+  Parameter attack{"attack", "", 10.f, 1.f, 50.f};
+  Parameter release{"release", "", 50.f, 1.f, 200.f};
   ParameterBool audioOutput{"audioOutput", "", false, 0.f, 1.f};
 
   Oscilliscope scope{static_cast<int>(AudioIO().framesPerSecond())};
-  giml::SinOsc osc{static_cast<int>(AudioIO().framesPerSecond())};
+  giml::Tremolo<float> myTrem{static_cast<int>(AudioIO().framesPerSecond())};
+
+  gam::SamplePlayer<float, gam::ipl::Linear, gam::phsInc::Loop> player;
 
   void onInit() {
     // set up GUI
@@ -60,16 +62,23 @@ struct Basic_IO : public App {
     auto &gui = GUIdomain->newGUI();
     gui.add(volControl); // add parameter to GUI
     gui.add(rmsMeter);
-    gui.add(audioOutput); 
-    gui.add(oscFreq);
-    //osc.setFrequency(-2.f);
+    gui.add(thresh); 
+    gui.add(ratio); 
+    gui.add(attack); 
+    gui.add(release); 
+
+    myTrem.setDepth(.8f);
+    myTrem.setSpeed(300.f);
+
+
+    //load file to player
+    player.load("../../Resources/HuckFinn.wav");
   }
 
   void onCreate() {}
 
   void onAnimate(double dt) {
     scope.update();
-    osc.setFrequency(oscFreq);
   }
 
   bool onKeyDown(const Keyboard &k) override {
@@ -88,11 +97,15 @@ struct Basic_IO : public App {
     // sample loop. variables declared inside reset for each sample
     while(io()) { 
       // capture input sample
-      float input = osc.processSample();
+      float input = player(0) * volFactor * audioOutput;
 
       // transform input for output (put your DSP here!)
-      float output = input * volFactor * audioOutput; 
+      float output = input;
+      if (audioOutput) {
+        output = myTrem.processSample(input);
+      }
       // float output = g(f(input)) etc... 
+      //float output = input * volFactor * audioOutput; 
 
       // for each channel, write output to speaker
       for (int channel = 0; channel < io.channelsOut(); channel++) {
@@ -124,16 +137,17 @@ struct Basic_IO : public App {
 };
   
 int main() {
-  Basic_IO app; // instance of our app 
+  Tremolo_Test app; // instance of our app 
   
   // Allows for manual declaration of input and output devices, 
   // but causes unpredictable behavior. Needs investigation.
   app.audioIO().deviceIn(AudioDevice("MacBook Pro Microphone")); // change for your device
-  app.audioIO().deviceOut(AudioDevice("MacBook Pro Speakers")); // change for your device
+  app.audioIO().deviceOut(AudioDevice("BH+Speakers")); // change for your device
   cout << "outs: " << app.audioIO().channelsOutDevice() << endl;
   cout << "ins: " << app.audioIO().channelsInDevice() << endl;
   app.configureAudio(48000, 128, app.audioIO().channelsOutDevice(), app.audioIO().channelsInDevice());
   // ^ samplerate, buffersize, channels out, channels in
+  //app.player.rate(1.0 / app.audioIO().channelsOutDevice());
 
   app.start();
   return 0;
