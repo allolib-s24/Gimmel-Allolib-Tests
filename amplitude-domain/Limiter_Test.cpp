@@ -23,30 +23,26 @@ public:
     this->primitive(Mesh::LINE_STRIP);
     for (int i = 0; i < bufferSize; i++) {
       this->vertex((i / static_cast<float>(bufferSize)) * 2.f - 1.f, 0);
-      buffer.push_back(0.f);
     }
   }
 
   void writeSample (float sample) {
-    for (int i = 0; i < bufferSize - 1; i++) {
-      buffer[i] = buffer[i + 1];
-    }
-    buffer[bufferSize - 1] = sample;
+    buffer.writeSample(sample);
   }
 
   void update() {
     for (int i = 0; i < bufferSize; i++) {
-      this->vertices()[i][1] = buffer[i];
+      this->vertices()[i][1] = buffer.readSample(bufferSize - i);
     }
   }
     
 protected:
   int bufferSize;
-  vector<float> buffer;
+  giml::CircularBuffer buffer;
 };
 
 // app struct
-struct Basic_IO : public App {
+struct Limiter_Test : public App {
   Parameter volControl{"volControl", "", 0.f, -96.f, 6.f};
   Parameter rmsMeter{"rmsMeter", "", -96.f, -96.f, 0.f};
   Parameter thresh{"thresh", "", 0.f, -96.f, 0.f};
@@ -141,7 +137,7 @@ struct Basic_IO : public App {
 };
   
 int main() {
-  Basic_IO app; // instance of our app 
+  Limiter_Test app; // instance of our app 
   
   // Allows for manual declaration of input and output devices, 
   // but causes unpredictable behavior. Needs investigation.
