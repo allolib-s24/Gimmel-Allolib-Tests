@@ -27,7 +27,7 @@ private:
 
 
 public:
-	TestTemplate(int sampleRate = 44100, int bufferSize = 256, std::string deviceIn = "Microphone", std::string deviceOut = "Speaker") : sampleRate(sampleRate),
+	TestTemplate(int sampleRate, int bufferSize, std::string deviceIn, std::string deviceOut) : sampleRate(sampleRate),
 	inputScope(sampleRate), outputScope(sampleRate) {
 		// configure audio device 
 		this->audioIO().deviceIn(al::AudioDevice(deviceIn)); // change for your device
