@@ -26,7 +26,6 @@ class MyTremoloTest : public TestTemplate {
 private:
 	int sampleRate;
 	giml::Tremolo<float> tremolo;
-	Oscilloscope inputScope, outputScope;
 
 	al::ParameterBool tremoloBypass{ "tremoloBypass", "", false, 0.f, 1.f }; //False means the effect is ON
 	al::Parameter rate{ "rate", "", 1.f, 0.1f, 1000.f };
@@ -35,13 +34,8 @@ private:
 public:
 	MyTremoloTest() :
 	sampleRate(static_cast<int>(al::AudioIO().framesPerSecond())), //Sets the sample rate so that we can set everything else to use it
-	inputScope(sampleRate), outputScope(sampleRate), tremolo(sampleRate) {
-		//TODO: initialize/add however many oscilloscopes you want here
-		//Add oscilloscopes to main list for backing class to properly render them
-		inputScope.setColorRGB255(255, 87, 51);
-		outputScope.setColorRGB255(4, 217, 255);
-		this->oscilloscopes.push_back(&inputScope);// need to store pointer to oscilloscopes so that we don't make copies
-		this->oscilloscopes.push_back(&outputScope);
+	tremolo(sampleRate) {
+
 	}
 	void onInit() override {
 		TestTemplate::onInit(); //Call the base class's init() first so that `gui` is initialized

@@ -12,11 +12,12 @@ using namespace std;
 #include "../Gimmel/include/modulation/Tremolo.hpp"
 #include "Gamma/SamplePlayer.h"
 
-// Oscilliscope that inherits from mesh 
-class Oscilliscope : public Mesh {
+// Oscilloscope that inherits from mesh 
+class Oscilloscope : public Mesh {
 public:
-  Oscilliscope (int samplerate) : bufferSize(samplerate) {
+  Oscilloscope(int samplerate) : bufferSize(samplerate) {
     this->primitive(Mesh::LINE_STRIP);
+    buffer.allocate(50000);
     for (int i = 0; i < bufferSize; i++) {
       this->vertex((i / static_cast<float>(bufferSize)) * 2.f - 1.f, 0);
     }
@@ -34,7 +35,7 @@ public:
     
 protected:
   int bufferSize;
-  giml::CircularBuffer buffer;
+  giml::CircularBuffer<float> buffer;
 };
 
 // app struct
@@ -43,10 +44,10 @@ struct Tremolo_Test : public App {
   Parameter rmsMeter{"rmsMeter", "", -96.f, -96.f, 0.f};
   ParameterBool audioOutput{"audioOutput", "", false, 0.f, 1.f};
 
-  Parameter rate{"rate", "", 1.f, 0.1f, 1000.f};
+  Parameter rate{"rate", "", 300.f, 0.1f, 1000.f};
   Parameter depth{"depth", "", 1.f, 0.f, 1.f};
 
-  Oscilliscope scope{static_cast<int>(AudioIO().framesPerSecond())};
+  Oscilloscope scope{static_cast<int>(AudioIO().framesPerSecond())};
   giml::Tremolo<float> myTrem{static_cast<int>(AudioIO().framesPerSecond())};
   gam::SamplePlayer<float, gam::ipl::Linear, gam::phsInc::Loop> player;
 
@@ -95,15 +96,13 @@ struct Tremolo_Test : public App {
       if (audioOutput) {
         output = myTrem.processSample(input);
       }
-      // float output = g(f(input)) etc... 
-      //float output = input * volFactor * audioOutput; 
 
       // for each channel, write output to speaker
       for (int channel = 0; channel < io.channelsOut(); channel++) {
         io.out(channel) = output; 
       }
 
-      // feed to oscilliscope
+      // feed to oscilloscope
       scope.writeSample(output);
 
       // feed to analysis buffer
