@@ -8,6 +8,7 @@
 #include "al/app/al_GUIDomain.hpp"
 
 #include "Oscilloscope.hpp"
+#include "../Gimmel/test/wav.h"
 
 class TestTemplate : public al::App {
 protected:
@@ -25,10 +26,13 @@ private:
 	Oscilloscope inputScope, outputScope;
 	std::vector<Oscilloscope*> oscilloscopes;
 
+	WAVLoader* pLoader = nullptr;
+
 
 public:
-	TestTemplate(int sampleRate, int bufferSize, std::string deviceIn, std::string deviceOut) : sampleRate(sampleRate),
+	TestTemplate(int sampleRate, int bufferSize, std::string deviceIn, std::string deviceOut, std::string inputFilepath) : sampleRate(sampleRate),
 	inputScope(sampleRate), outputScope(sampleRate) {
+
 		// configure audio device 
 		this->audioIO().deviceIn(al::AudioDevice(deviceIn)); // change for your device
 		this->audioIO().deviceOut(al::AudioDevice(deviceOut)); // change for your device
@@ -38,6 +42,13 @@ public:
 		outputScope.setColorRGB255(4, 217, 255); //Light blue
 		this->oscilloscopes.push_back(&inputScope);// need to store pointer to oscilloscopes so that we don't make copies
 		this->oscilloscopes.push_back(&outputScope);
+
+		if (inputFilepath.size() > 0) { // Not empty
+			pLoader = new WAVLoader{ inputFilepath.c_str() }; //Pick an input sound to test
+			if (!pLoader) {
+				//Failed to allocated heap memory for WAV class
+			}
+		}
 	}
 	
 	virtual void onInit() {
@@ -77,7 +88,14 @@ public:
 		auto bufferSize = io.framesPerBuffer();
 		for (int sample = 0; sample < bufferSize; sample++) {
 			// capture input sample
-			float input = io.in(0, sample); //Support only mono channels for now
+			float input;
+			if (pLoader) {
+				pLoader->readSample(&input);
+			}
+			else {
+				input = io.in(0, sample); //Support only mono channels for now
+			}
+			
 			this->inputScope.writeSample(input);
 			// transform input for output (they will override this function to do stuff)
 			float output = this->sampleLoop(input);

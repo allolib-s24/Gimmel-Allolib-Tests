@@ -11,8 +11,9 @@ private:
 
 public:
 	TestDetune(int sampleRate = 44100, int bufferSize = 256,
-	std::string deviceIn = "Microphone", std::string deviceOut = "Speaker") :
-	TestTemplate(sampleRate, bufferSize, deviceIn, deviceOut),
+	std::string deviceIn = "Microphone", std::string deviceOut = "Speaker",
+	std::string inputFilepath = "") :
+	TestTemplate(sampleRate, bufferSize, deviceIn, deviceOut, inputFilepath),
 	detune(sampleRate) {}
 
 	void onInit() override {
@@ -57,7 +58,7 @@ public:
 };
 
 int main() {
-	TestDetune app(44100, 512, "MacBook Pro Microphone", "MacBook Pro Speakers"); // instance of our app 
+	TestDetune app(48000, 512, "MacBook Pro Microphone", "MacBook Pro Speakers", "../../Resources/3xGmaj.wav"); // instance of our app 
 	app.start();
 	return 0;
 }
