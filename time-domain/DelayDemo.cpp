@@ -58,7 +58,7 @@ public:
 };
 
 int main() {
-	DelayDemo app(44100, 512, "MacBook Pro Microphone", "MacBook Pro Speakers", "../../Resources/homemadeLick.wav"); // instance of our app 
+	DelayDemo app(44100, 512, "MacBook Pro Microphone", "MacBook Pro Speakers", "../../Resources/SoftGuitar.wav"); // instance of our app 
 	app.start();
 	return 0;
 }
