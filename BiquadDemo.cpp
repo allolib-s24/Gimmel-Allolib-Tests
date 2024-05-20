@@ -1,5 +1,5 @@
-#include "../utility/TestTemplate.hpp"
-#include "../Gimmel/include/Biquad.hpp"
+#include "utility/TestTemplate.hpp"
+#include "Gimmel/include/Biquad.hpp"
 #include "al/math/al_Random.hpp"
 
 class BiquadDemo : public TestTemplate {
@@ -94,45 +94,45 @@ public:
 		switch (filterType) {
 			// First-Order Filters
 			case 0: {
-				this->filter.setParams__LPF_1st(freq); // "LPF_1st" // First-Order Lowpass Filter (LPF)
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::LPF_1st); // "LPF_1st" // First-Order Lowpass Filter (LPF)
 				break;
 			}
 			case 1: {
-				this->filter.setParams__HPF_1st(freq); // "HPF_1st"  // First-Order Highpass Filter (HPF)
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::HPF_1st); // "HPF_1st"  // First-Order Highpass Filter (HPF)
 				break;
 			}
 
 			case 2: {
-				this->filter.setParams__LPF_2nd(freq, q); // "LPF_2nd" // Second-Order LPF
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::LPF_2nd); // "LPF_2nd" // Second-Order LPF
 				break;
 			}
 			case 3: {
-				this->filter.setParams__HPF_2nd(freq, q); // "HPF_2nd"  // Second-Order HPF
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::HPF_2nd); // "HPF_2nd"  // Second-Order HPF
 				break;
 			}
 			case 4: {
-				this->filter.setParams__BPF(freq, q); // "BPF" // Bandpass Filter (BPF)
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::BPF); // "BPF" // Bandpass Filter (BPF)
 				break;
 			}
 			case 5: {
-				this->filter.setParams__BSF(freq, q); // "BSF" // Bandstop Filter (BSF)
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::BSF); // "BSF" // Bandstop Filter (BSF)
 				break;
 			}
 			// Butterworth Filters
 			case 6: {
-				this->filter.setParams__LPF_Butterworth(freq); // "LPF_Butterworth" // Butterworth LPF
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::LPF_Butterworth); // "LPF_Butterworth" // Butterworth LPF
 				break;
 			}
 			case 7: {
-				this->filter.setParams__HPF_Butterworth(freq); // "HPF_Butterworth" // Butterworth HPF
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::HPF_Butterworth); // "HPF_Butterworth" // Butterworth HPF
 				break;
 			}	
 			case 8: {
-				this->filter.setParams__BPF_Butterworth(freq, q); // "BPF_Butterworth" // Butterworth BPF
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::BPF_Butterworth); // "BPF_Butterworth" // Butterworth BPF
 				break;
 			}
 			case 9: {
-				this->filter.setParams__BSF_Butterworth(freq, q); // "BSF_Butterworth" // Butterworth BSF
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::BSF_Butterworth); // "BSF_Butterworth" // Butterworth BSF
 				break;
 			}
 			// Linkwitz-Riley - steeper than Butterworth
@@ -146,32 +146,34 @@ public:
 			}
 			// All-pass filters (no frequency changes, only phase shift)
 			case 12: {
-				this->filter.setParams__APF_1st(freq); // "APF_1st" // First-Order Allpass Filter (APF)
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::APF_1st); // "APF_1st" // First-Order Allpass Filter (APF)
 				break;
 			}		
 			case 13: {
-				this->filter.setParams__APF_2nd(freq, q); // "APF_2nd" // Second-Order APF -> 2nd-Order APF has double the phase shift
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::APF_2nd); // "APF_2nd" // Second-Order APF -> 2nd-Order APF has double the phase shift
 				break;
 			}	
 			// Shelf filters
 			case 14: {
-				this->filter.setParams__LSF(freq, q); // "LSF" // First-Order Low Shelf Filter (LSF)
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::LSF); // "LSF" // First-Order Low Shelf Filter (LSF)
 				break;
 			}	
 			case 15: {
-				this->filter.setParams__HSF(freq, q); // "HSF" // First-Order High Shelf Filter (HSF)
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::HSF); // "HSF" // First-Order High Shelf Filter (HSF)
 				break;
 			}	
 			// Parametric EQ Filters
 			case 16: {
-				//this->filter.setParams__PEQfreq, q); // "PEQ" //(non-const Q)
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::PEQ); // "PEQ" //(non-const Q)
 				break;
 			}	
 			case 17: {
-				this->filter.setParams__PEQ_constQ(freq, q, gain); // "PEQ_constQ" // Parametric EQ Filter (const Q)
+				this->filter.setType(giml::Biquad<float>::BiquadUseCase::PEQ_constQ); // "PEQ_constQ" // Parametric EQ Filter (const Q)
 				break;
 			}					
 		}
+
+		this->filter.setParams(freq, q, gain);
 
 		float out = this->filter.processSample(noise);
 		return out;
