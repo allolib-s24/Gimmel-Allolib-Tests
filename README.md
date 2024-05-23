@@ -8,7 +8,11 @@ Make sure you can use
 
     before proceeding.
 
-2. Then clone this repository anywhere inside `allolib_playground/`
+2. Then clone this repository anywhere inside `allolib_playground/` using the command
+   ```
+   git clone https://github.com/allolib-s24/Gimmel-Allolib-Tests.git --recurse-submodules
+   ```
+   (you can clone however you like but using the flag `--recurse-submodules` will make it easier to init and update the `Gimmel` submodule.
 
     In order for cmake to find the `Gimmel` library, add the following into the root `allolib_playground/CMakeLists.txt` file:
     ```
