@@ -6,8 +6,11 @@ private:
 	giml::Compressor<float> compressor;
 
 	al::ParameterBool bypass{ "bypass", "", true, 0.f, 1.f }; //False means the effect is ON
-	al::Parameter thresh{"thresh", "", 0.0, 6.f, -96.f};
+	al::Parameter thresh{"thresh", "", 0, -96.f, 6.f};
 	al::Parameter ratio{"ratio", "", 1.f, 1.f, 30.f};
+	al::Parameter knee{"knee", "", 1.f, 0.f, 10.f};
+	al::Parameter gain{"gain", "", 0.f, -96.f, 30.f};
+
 
 public:
 	CompressorDemo(int sampleRate = 44100, int bufferSize = 256,
@@ -23,6 +26,8 @@ public:
 		this->panel->gui.add(bypass);
 		this->panel->gui.add(thresh);
 		this->panel->gui.add(ratio);
+		this->panel->gui.add(knee);
+		this->panel->gui.add(gain);
 	}
 
 	void onCreate() override {
@@ -31,13 +36,6 @@ public:
 		const std::function<void(bool)> bypassCallback = [&](bool a) { if (!a) { this->compressor.enable(); }
 		else { this->compressor.disable(); } };
 		bypass.registerChangeCallback(bypassCallback);
-
-		// effect parameter callbacks
-		const std::function<void(float)> rateCallback = [&](float a) { this->compressor.setRatio(ratio); };
-		ratio.registerChangeCallback(rateCallback);
-
-		const std::function<void(float)> depthCallback = [&](float a) { this->compressor.setThreshold(thresh); };
-		thresh.registerChangeCallback(depthCallback);
 	}
 
 	bool onKeyDown(const al::Keyboard &k) override {
@@ -52,13 +50,16 @@ public:
 
 	float sampleLoop(float in) override {
 		// DSP logic goes here
-		float out = compressor.processSample(in);
+		this->compressor.setRatio(ratio);
+		this->compressor.setThresh(thresh);
+		this->compressor.setKnee(knee);
+		float out = this->compressor.processSample(in * giml::dBtoA(this->gain));
 		return out;
 	}
 };
 
 int main() {
-	CompressorDemo app(44100, 512, "MacBook Pro Microphone", "MacBook Pro Speakers", "../../Resources/3xGmaj.wav"); // instance of our app 
+	CompressorDemo app(44100, 128, "MacBook Pro Microphone", "Headphones", "../../Resources/HuckFinn.wav"); // instance of our app 
 	app.start();
 	return 0;
 }
