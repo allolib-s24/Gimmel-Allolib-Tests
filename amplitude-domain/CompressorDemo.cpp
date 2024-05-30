@@ -10,6 +10,8 @@ private:
 	al::Parameter ratio{"ratio", "", 1.f, 1.f, 30.f};
 	al::Parameter knee{"knee", "", 1.f, 0.f, 10.f};
 	al::Parameter gain{"gain", "", 0.f, -96.f, 30.f};
+	al::Parameter attack{"attack", "", 1.f, 1.f, 50.f};
+	al::Parameter release{"release", "", 1.f, 1.f, 300.f};
 
 
 public:
@@ -28,6 +30,8 @@ public:
 		this->panel->gui.add(ratio);
 		this->panel->gui.add(knee);
 		this->panel->gui.add(gain);
+		this->panel->gui.add(attack);
+		this->panel->gui.add(release);
 	}
 
 	void onCreate() override {
@@ -53,6 +57,8 @@ public:
 		this->compressor.setRatio(ratio);
 		this->compressor.setThresh(thresh);
 		this->compressor.setKnee(knee);
+		this->compressor.setAttackTime(attack);
+		this->compressor.setReleaseTime(release);
 		float out = this->compressor.processSample(in * giml::dBtoA(this->gain));
 		return out;
 	}
