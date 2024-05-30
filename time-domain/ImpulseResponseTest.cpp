@@ -1,9 +1,9 @@
 #include "../utility/ImpulseResponseTemplate.hpp"
-#include "../Gimmel/include/time-domain/Delay.hpp"
+#include "../Gimmel/include/Reverb.hpp"
 
 class IRTest : public IRTemplate  {
 private:
-	giml::Delay<float> delay;
+	giml::Reverb<float> reverb;
 
 	al::ParameterBool bypass{ "bypass", "", true, 0.f, 1.f }; //False means the effect is ON
 	al::Parameter feedback{"feedback", "", 0.f, 0.f, 2.f};
@@ -14,7 +14,7 @@ public:
 	std::string deviceIn = "Microphone", std::string deviceOut = "Speaker",
 	std::string inputFilepath = "") :
 	IRTemplate(sampleRate, bufferSize, deviceIn, deviceOut, inputFilepath), 
-	delay(sampleRate) {}
+	reverb(sampleRate) {}
 
 	void onInit() override {
 		IRTemplate::onInit(); //Call the base class's init() first so that `gui` is initialized
@@ -28,16 +28,20 @@ public:
 	void onCreate() override {
 		IRTemplate::onCreate(); //Call the base class' create() first in case we add anything there later
 		// bypass callback 
-		const std::function<void(bool)> bypassCallback = [&](bool a) { if (!a) { this->delay.enable(); }
-		else { this->delay.disable(); } };
+		const std::function<void(bool)> bypassCallback = [&](bool a) { if (!a) { this->reverb.enable(); }
+		else { this->reverb.disable(); } };
 		bypass.registerChangeCallback(bypassCallback);
 
-		// effect parameter callbacks
-		const std::function<void(float)> rateCallback = [&](float a) { this->delay.setFeedback(feedback); };
-		feedback.registerChangeCallback(rateCallback);
+		this->reverb.setTime(0.02); //in ms
+		this->reverb.setRoom(10); //in ft
+		this->reverb.setDamping(0); //0 means no low pass added
 
-		const std::function<void(float)> depthCallback = [&](float a) { this->delay.setDelayTime(timeMillis); };
-		timeMillis.registerChangeCallback(depthCallback);
+		//// effect parameter callbacks
+		//const std::function<void(float)> rateCallback = [&](float a) { this->reverb.setFeedback(feedback); };
+		//feedback.registerChangeCallback(rateCallback);
+
+		//const std::function<void(float)> depthCallback = [&](float a) { this->reverb.setreverbTime(timeMillis); };
+		//timeMillis.registerChangeCallback(depthCallback);
 	}
 
 	bool onKeyDown(const al::Keyboard &k) override {
@@ -52,13 +56,13 @@ public:
 
 	float sampleLoop(float in) override {
 		// DSP logic goes here
-		//float out = delay.processSample(in);
-		return in;
+		float out = reverb.processSample(in);
+		return out;
 	}
 };
 
 int main() {
-	IRTest app(44100, 128, "MacBook Pro Microphone", "Headphones"); // instance of our app 
+	IRTest app(44100, 128, "Microphone", "Headphones"); // instance of our app 
 	app.start();
 	return 0;
 }
