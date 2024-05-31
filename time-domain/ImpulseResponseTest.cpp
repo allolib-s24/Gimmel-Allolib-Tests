@@ -6,8 +6,9 @@ private:
 	giml::Reverb<float> reverb;
 
 	al::ParameterBool bypass{ "bypass", "", true, 0.f, 1.f }; //False means the effect is ON
-	al::Parameter feedback{"feedback", "", 0.f, 0.f, 2.f};
-	al::Parameter timeMillis{"timeMillis", "", 0.f, 0.f, 1000.f};
+	al::Parameter reverbTime{"time", "", 0.2f, 0.f, 1.f}; //Sec
+	al::Parameter reverbSpace{"space", "", 10.f, 0.f, 1000.f}; //ft
+	al::Parameter reverbDamping{ "damping", "", 0.f, 0.f, 0.99f }; //ratio
 
 public:
 	IRTest(int sampleRate = 44100, int bufferSize = 256,
@@ -21,8 +22,9 @@ public:
 		
 		//TODO: Add other parameters you'd need here
 		this->panel->gui.add(bypass);
-		this->panel->gui.add(feedback);
-		this->panel->gui.add(timeMillis);
+		this->panel->gui.add(reverbTime);
+		this->panel->gui.add(reverbSpace);
+		this->panel->gui.add(reverbDamping);
 	}
 
 	void onCreate() override {
@@ -32,16 +34,19 @@ public:
 		else { this->reverb.disable(); } };
 		bypass.registerChangeCallback(bypassCallback);
 
-		this->reverb.setTime(0.02); //in ms
-		this->reverb.setRoom(10); //in ft
-		this->reverb.setDamping(0); //0 means no low pass added
+		this->reverb.setTime(reverbTime); //in sec
+		this->reverb.setRoom(reverbSpace); //in ft
+		this->reverb.setDamping(reverbDamping); //0 means no low pass added
 
-		//// effect parameter callbacks
-		//const std::function<void(float)> rateCallback = [&](float a) { this->reverb.setFeedback(feedback); };
-		//feedback.registerChangeCallback(rateCallback);
+		// effect parameter callbacks
+		const std::function<void(float)> timeCallback = [&](float a) { this->reverb.setTime(a); };
+		reverbTime.registerChangeCallback(timeCallback);
 
-		//const std::function<void(float)> depthCallback = [&](float a) { this->reverb.setreverbTime(timeMillis); };
-		//timeMillis.registerChangeCallback(depthCallback);
+		const std::function<void(float)> spaceCallback = [&](float a) { this->reverb.setRoom(a); };
+		reverbSpace.registerChangeCallback(spaceCallback);
+
+		const std::function<void(float)> dampingCallback = [&](float a) { this->reverb.setDamping(a); };
+		reverbDamping.registerChangeCallback(dampingCallback);
 	}
 
 	bool onKeyDown(const al::Keyboard &k) override {
