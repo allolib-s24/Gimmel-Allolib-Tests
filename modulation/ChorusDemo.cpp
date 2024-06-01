@@ -32,12 +32,15 @@ public:
 		else { this->chorus.disable(); } };
 		bypass.registerChangeCallback(bypassCallback);
 
-		// effect parameter callbacks
-		const std::function<void(float)> rateCallback = [&](float a) { this->chorus.setDepth(depth); };
-		depth.registerChangeCallback(rateCallback);
+		// // effect parameter callbacks
+		// const std::function<void(float)> rateCallback = [&](float a) { this->chorus.setDepth(a); 
+		// 	std::cout << "a:" << a << std::endl;
+		// 	std::cout << "depth:" << depth << std::endl;
+		// };
+		// depth.registerChangeCallback(rateCallback);
 
-		const std::function<void(float)> depthCallback = [&](float a) { this->chorus.setRate(rate); };
-		rate.registerChangeCallback(depthCallback);
+		// const std::function<void(float)> depthCallback = [&](float a) { this->chorus.setRate(a); };
+		// rate.registerChangeCallback(depthCallback);
 	}
 
 	bool onKeyDown(const al::Keyboard &k) override {
@@ -52,13 +55,15 @@ public:
 
 	float sampleLoop(float in) override {
 		// DSP logic goes here
+		chorus.setDepth(this->depth);
+		chorus.setRate(this->rate);
 		float out = chorus.processSample(in);
 		return out;
 	}
 };
 
 int main() {
-	ChorusDemo app(44100, 512, "MacBook Pro Microphone", "External Speakers", "../../Resources/3xGmaj.wav"); // instance of our app 
+	ChorusDemo app(44100, 512, "MacBook Pro Microphone", "MacBook Pro Speakers", "../../Resources/SoftGuitar.wav"); // instance of our app 
 	app.start();
 	return 0;
 }
