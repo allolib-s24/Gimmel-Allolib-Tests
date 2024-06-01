@@ -1,44 +1,40 @@
 #include "../utility/TestTemplate.hpp"
-#include "../Gimmel/include/amplitude-domain/Compressor.hpp"
+#include "../Gimmel/include/amplitude-domain/Saturation.hpp"
 
-class CompressorDemo : public TestTemplate {
+class SaturationDemo : public TestTemplate {
 private:
-	giml::Compressor<float> compressor;
+	giml::Saturation<float> saturation;
+	giml::SinOsc osc;
 
 	al::ParameterBool bypass{ "bypass", "", true, 0.f, 1.f }; //False means the effect is ON
-	al::Parameter thresh{"thresh", "", 0, -96.f, 6.f};
-	al::Parameter ratio{"ratio", "", 4.f, 1.f, 30.f};
-	al::Parameter knee{"knee", "", 2.f, 0.f, 10.f};
 	al::Parameter gain{"gain", "", 0.f, -96.f, 30.f};
-	al::Parameter attack{"attack", "", 10.f, 1.f, 50.f};
-	al::Parameter release{"release", "", 100.f, 1.f, 300.f};
+	al::Parameter volume{"volume", "", 0.f, -96.f, 30.f};
+	al::Parameter drive{"drive", "", 1.f, 0.f, 20.f};
 
 
 public:
-	CompressorDemo(int sampleRate = 44100, int bufferSize = 256,
+	SaturationDemo(int sampleRate = 44100, int bufferSize = 256,
 	std::string deviceIn = "Microphone", std::string deviceOut = "Speaker",
 	std::string inputFilepath = "") :
 	TestTemplate(sampleRate, bufferSize, deviceIn, deviceOut, inputFilepath),
-	compressor(sampleRate) {}
+	saturation(), osc(sampleRate) {}
 
 	void onInit() override {
 		TestTemplate::onInit(); //Call the base class's init() first so that `gui` is initialized
 		
 		//TODO: Add other parameters you'd need here
 		this->panel->gui.add(bypass);
-		this->panel->gui.add(thresh);
-		this->panel->gui.add(ratio);
-		this->panel->gui.add(knee);
 		this->panel->gui.add(gain);
-		this->panel->gui.add(attack);
-		this->panel->gui.add(release);
+		this->panel->gui.add(volume);
+		this->panel->gui.add(drive);
+		osc.setFrequency(1.f);
 	}
 
 	void onCreate() override {
 		TestTemplate::onCreate(); //Call the base class' create() first in case we add anything there later
 		// bypass callback 
-		const std::function<void(bool)> bypassCallback = [&](bool a) { if (!a) { this->compressor.enable(); }
-		else { this->compressor.disable(); } };
+		const std::function<void(bool)> bypassCallback = [&](bool a) { if (!a) { this->saturation.enable(); }
+		else { this->saturation.disable(); } };
 		bypass.registerChangeCallback(bypassCallback);
 	}
 
@@ -54,18 +50,18 @@ public:
 
 	float sampleLoop(float in) override {
 		// DSP logic goes here
-		this->compressor.setRatio(ratio);
-		this->compressor.setThresh(thresh);
-		this->compressor.setKnee(knee);
-		this->compressor.setAttack(attack);
-		this->compressor.setRelease(release);
-		float out = this->compressor.processSample(in * giml::dBtoA(this->gain));
+		this->saturation.setGain(giml::dBtoA(this->gain));
+		this->saturation.setVolume(giml::dBtoA(this->volume));
+		this->saturation.setDrive(giml::dBtoA(this->drive));
+
+		float out = this->saturation.processSample(this->osc.processSample() * giml::dBtoA(this->gain));
+		//float out = osc.processSample();
 		return out;
 	}
 };
 
 int main() {
-	CompressorDemo app(44100, 128, "MacBook Pro Microphone", "Headphones", "../../Resources/HuckFinn.wav"); // instance of our app 
+	SaturationDemo app(44100, 128, "MacBook Pro Microphone", "MacBook Pro Speakers"); // instance of our app 
 	app.start();
 	return 0;
 }
