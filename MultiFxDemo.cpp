@@ -1,3 +1,4 @@
+// Gimmel Includes 
 #include "utility/TestTemplate.hpp"
 #include "Gimmel/include/modulation/Detune.hpp"
 #include "Gimmel/include/time-domain/Reverb.hpp"
@@ -5,17 +6,17 @@
 #include "Gimmel/include/amplitude-domain/Saturation.hpp"
 #include "Gimmel/include/Biquad.hpp"
 
+// Allolib include for GUI
 #include "al/ui/al_ParameterGUI.hpp"
 
 class MultiFxDemo : public TestTemplate {
 private:
 	// each effect will have instantiation and params here...
-	// what effects do we want? saturation (w/ oversampling), filter (cab sim), detune, reverb, compressor?
 	giml::Saturation<float> saturation;
 	al::ParameterBool saturationBypass{ "saturationBypass", "", true, 0.f, 1.f }; // False means the effect is ON
 	al::Parameter preAmpGain{"preAmpGain", "", 20.f, -96.f, 30.f};
 	al::Parameter drive{"drive", "", 26.f, 1.f, 75.f};
-	al::Parameter volume{"volume", "", -12.f, -96.f, 0.f};
+	al::Parameter volume{"volume", "", -20.f, -96.f, 0.f};
 	
 	giml::Biquad<float> filter; // lo-pass filter for a cheap cab sim
 	al::ParameterBool filterBypass{ "filterBypass", "", true, 0.f, 1.f }; //False means the effect is ON
@@ -23,22 +24,22 @@ private:
 	
 	giml::Detune<float> detune;
 	al::ParameterBool detuneBypass{ "detuneBypass", "", true, 0.f, 1.f }; // False means the effect is ON
-	al::Parameter pRatio{ "pRatio", "", 0.988f, 0.5f, 2.f };
+	al::Parameter pRatio{ "pRatio", "", 0.993f, 0.5f, 2.f };
 	al::Parameter wSize{ "wSize", "", 22.f, 5.f, 50.f };
 
 	giml::Reverb<float> reverb;
 	al::ParameterBool reverbBypass{ "reverbBypass", "", true, 0.f, 1.f }; //False means the effect is ON
-	al::Parameter time{"time", "", 0.02f, 0.f, 10.f}; //Sec
-	al::Parameter space{"space", "", 5.f, 0.f, 1000.f}; //ft
+	al::Parameter time{"time", "", 0.02f, 0.f, 1.f}; //Sec
+	al::Parameter space{"space", "", 5.f, 0.f, 50.f}; //ft
 	al::Parameter damping{ "damping", "", 0.5f, 0.f, 0.99f }; //ratio
 
 	giml::Compressor<float> compressor;
 	al::ParameterBool compressorBypass{ "compressorBypass", "", true, 0.f, 1.f }; //False means the effect is ON
-	al::Parameter thresh{"thresh", "", 0, -96.f, 6.f};
+	al::Parameter thresh{"thresh", "", -20, -96.f, 6.f};
 	al::Parameter ratio{"ratio", "", 4.f, 1.f, 30.f};
 	al::Parameter knee{"knee", "", 2.f, 0.1f, 10.f};
-	al::Parameter gain{"gain", "", 0.f, -96.f, 30.f};
-	al::Parameter attack{"attack", "", 10.f, 1.f, 50.f};
+	al::Parameter gain{"gain", "", 10.f, -96.f, 30.f};
+	al::Parameter attack{"attack", "", 3.5f, 1.f, 50.f};
 	al::Parameter release{"release", "", 100.f, 1.f, 300.f};
 
 public:
@@ -51,11 +52,11 @@ public:
 	}
 
 	void onInit() override {
-		al::imguiInit();
+		al::imguiInit(); // GUI init
 	}
 
 	void onCreate() override {
-		TestTemplate::onCreate(); //Call the base class' create() first in case we add anything there later
+		TestTemplate::onCreate(); // Call the base class' create() first 
 		// bypass callback 
 		const std::function<void(bool)> saturationBypassCallback = [&](bool a) { if (!a) { this->saturation.enable(); }
 		else { this->saturation.disable(); } };
@@ -82,7 +83,7 @@ public:
 		compressorBypass.registerChangeCallback(compressorBypassCallback);
 	}
 
-	float sampleLoop(float in) override {
+	float sampleLoop(float in) override { // called inside onSound
 		// DSP logic goes here
 
 		float out = in;
@@ -95,17 +96,19 @@ public:
 		
 		/* Signal Chain
 		Saturation 
-		Lo-Pass (Biquad)
+		Lo-Pass
 		Detune
 		Reverb
-		Compressor? 
+		Compressor
 		*/
 	
 	}
 
-	void onAnimate(double dt) override {
+	void onAnimate(double dt) override { // called ~60fps
 		TestTemplate::onAnimate(dt);
+		// GUI Setup
 		al::imguiBeginFrame();
+		// Add a Panel for each effect
 		this->DrawPanel("Saturation", {&saturationBypass, &preAmpGain, &drive, &volume});
 		this->DrawPanel("Filter", {&filterBypass, &cutoffFreq});
 		this->DrawPanel("Detune", {&detuneBypass, &pRatio, &wSize});
@@ -154,7 +157,7 @@ public:
 };
 
 int main() {
-	MultiFxDemo app(44100, 128, "Volt 276", "Headphones"); // instance of our app 
+	MultiFxDemo app(44100, 128, "Volt 276", "Volt 276"); // instance of our app 
 	app.start();
 	return 0;
 }
