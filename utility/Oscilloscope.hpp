@@ -20,7 +20,7 @@ public:
 	}
 	void update() {
 		for (int i = 0; i < this->bufferSize; i++) {
-			this->vertices()[i][1] = this->buffer.readSample(this->bufferSize - i);
+			this->vertices()[i][1] = this->buffer.readSample((size_t)(this->bufferSize - i));
 		}
 	}
 	void setColorRGB255(int red, int green, int blue) {

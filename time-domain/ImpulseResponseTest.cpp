@@ -1,12 +1,12 @@
 #include "../utility/ImpulseResponseTemplate.hpp"
-#include "../Gimmel/include/Reverb.hpp"
+#include "../Gimmel/include/time-domain/Reverb.hpp"
 
 class IRTest : public IRTemplate  {
 private:
 	giml::Reverb<float> reverb;
 
 	al::ParameterBool bypass{ "bypass", "", true, 0.f, 1.f }; //False means the effect is ON
-	al::Parameter reverbTime{"time", "", 0.2f, 0.f, 1.f}; //Sec
+	al::Parameter reverbTime{"time", "", 0.02f, 0.f, 10.f}; //Sec
 	al::Parameter reverbSpace{"space", "", 10.f, 0.f, 1000.f}; //ft
 	al::Parameter reverbDamping{ "damping", "", 0.f, 0.f, 0.99f }; //ratio
 
@@ -56,18 +56,30 @@ public:
 			bypass = !bypass;
 			std::cout << "Bypass Status: " << bypass << std::endl;
 		}
+		if (k.key() == '2') { // <- on b, toggle effect bypass
+			last = 1.f;
+			std::cout << "BANG!" << std::endl;
+		}
 		return returnVal;
 	}
 
+	float last = 0.f;
 	float sampleLoop(float in) override {
 		// DSP logic goes here
 		float out = reverb.processSample(in);
+		// gain -= decrement rewritten as gain *=
+		//
+		// float decrement = 1.f / (reverbTime * this->sampleRate);
+		// //float gain = 1.f - decrement;
+		// float gain = 0.2;
+		// float out = in + last * -gain;
+		// last = out;
 		return out;
 	}
 };
 
 int main() {
-	IRTest app(44100, 128, "Microphone", "Headphones"); // instance of our app 
+	IRTest app(48000, 128, "MacBook Pro Microphone", "MacBook Pro Speakers" ,"../../Resources/vocals.wav"); // instance of our app 
 	app.start();
 	return 0;
 }

@@ -122,7 +122,7 @@ public:
 		rmsMeter = giml::aTodB(bufferPower); // print to GUI display
 	}
 
-	void onDraw(al::Graphics& g) {
+	virtual void onDraw(al::Graphics& g) {
 		g.clear(0);
 		g.meshColor();
 		g.camera(al::Viewpoint::IDENTITY); // Ortho [-1:1] x [-1:1]
