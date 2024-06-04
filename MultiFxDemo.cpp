@@ -1,9 +1,9 @@
 // Gimmel Includes 
-#include "utility/TestTemplate.hpp"
-#include "Gimmel/include/modulation/Detune.hpp"
-#include "Gimmel/include/time-domain/Reverb.hpp"
-#include "Gimmel/include/amplitude-domain/Compressor.hpp"
-#include "Gimmel/include/amplitude-domain/Saturation.hpp"
+#include "Utility/TestTemplate.hpp"
+#include "Gimmel/include/Detune.hpp"
+#include "Gimmel/include/Reverb.hpp"
+#include "Gimmel/include/Compressor.hpp"
+#include "Gimmel/include/Saturation.hpp"
 #include "Gimmel/include/Biquad.hpp"
 
 // Allolib include for GUI
@@ -157,7 +157,7 @@ public:
 };
 
 int main() {
-	MultiFxDemo app(44100, 128, "Volt 276", "Volt 276"); // instance of our app 
+	MultiFxDemo app(44100, 128, "Volt 276", "Headphones"); // instance of our app 
 	app.start();
 	return 0;
 }

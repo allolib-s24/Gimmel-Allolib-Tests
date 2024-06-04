@@ -1,9 +1,9 @@
-#include "../utility/TestTemplate.hpp"
-#include "../Gimmel/include/amplitude-domain/Saturation.hpp"
+#include "Utility/TestTemplate.hpp"
+#include "Gimmel/include/Saturation.hpp"
 
 class SaturationDemo : public TestTemplate {
 private:
-	giml::Saturation<double> saturation, sat2;
+	giml::Saturation<float> saturation, sat2;
 	giml::SinOsc osc;
 
 	al::ParameterBool bypass{ "oversampling", "", true, 0.f, 1.f }; //False means the effect is ON
@@ -17,7 +17,7 @@ public:
 	std::string deviceIn = "Microphone", std::string deviceOut = "Speaker",
 	std::string inputFilepath = "") :
 	TestTemplate(sampleRate, bufferSize, deviceIn, deviceOut, inputFilepath),
-	saturation(sampleRate), sat2(sampleRate, 8), osc(sampleRate) {}
+	saturation(sampleRate), sat2(sampleRate, 128), osc(sampleRate) {}
 
 	void onInit() override {
 		TestTemplate::onInit(); //Call the base class's init() first so that `gui` is initialized
@@ -76,7 +76,7 @@ public:
 };
 
 int main() {
-	SaturationDemo app(48000, 128, "Microphone", "Headphone"/*, "../../Resources/homemadeLick.wav"*/); // instance of our app 
+	SaturationDemo app(48000, 128, "Volt 276", "Headphones"/*, "../Resources/homemadeLick.wav"*/); // instance of our app 
 	app.start();
 	return 0;
 }

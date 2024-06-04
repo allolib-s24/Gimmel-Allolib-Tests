@@ -2,7 +2,7 @@
 #define OSCILLOSCOPE_HPP
 
 #include "al/graphics/al_Mesh.hpp"
-#include "../Gimmel/include/utility.hpp"
+#include "../Gimmel/include/Utility.hpp"
 class Oscilloscope : public al::Mesh {
 public:
 	Oscilloscope() = delete; //Remove default constructor because we do not want them instantiating it

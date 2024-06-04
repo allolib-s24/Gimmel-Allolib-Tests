@@ -1,5 +1,5 @@
-#include "../utility/TestTemplate.hpp"
-#include "../Gimmel/include/modulation/Tremolo.hpp"
+#include "Utility/TestTemplate.hpp"
+#include "Gimmel/include/Tremolo.hpp"
 
 class TremoloDemo : public TestTemplate {
 private:
@@ -58,7 +58,7 @@ public:
 };
 
 int main() {
-	TremoloDemo app(44100, 512, "MacBook Pro Microphone", "MacBook Pro Speakers", "../../Resources/3xGmaj.wav"); // instance of our app 
+	TremoloDemo app(44100, 512, "MacBook Pro Microphone", "MacBook Pro Speakers", "../Resources/3xGmaj.wav"); // instance of our app 
 	app.start();
 	return 0;
 }
