@@ -1,5 +1,5 @@
-#include "../utility/TestTemplate.hpp"
-#include "../Gimmel/include/amplitude-domain/Compressor.hpp"
+#include "Utility/TestTemplate.hpp"
+#include "Gimmel/include/Compressor.hpp"
 
 class CompressorDemo : public TestTemplate {
 private:
@@ -65,7 +65,7 @@ public:
 };
 
 int main() {
-	CompressorDemo app(44100, 128, "MacBook Pro Microphone", "Headphones", "../../Resources/HuckFinn.wav"); // instance of our app 
+	CompressorDemo app(44100, 128, "MacBook Pro Microphone", "Headphones", "../Resources/HuckFinn.wav"); // instance of our app 
 	app.start();
 	return 0;
 }

@@ -1,5 +1,5 @@
-#ifndef TESTTEMPLATE_HPP
-#define TESTTEMPLATE_HPP
+#ifndef TEST_TEMPLATE_HPP
+#define TEST_TEMPLATE_HPP
 
 #include <iostream>
 #include <string>
@@ -8,7 +8,7 @@
 #include "al/app/al_GUIDomain.hpp"
 
 #include "Oscilloscope.hpp"
-#include "../Gimmel/test/wav.h"
+#include "../Gimmel/Test/wav.h"
 
 class TestTemplate : public al::App {
 protected:

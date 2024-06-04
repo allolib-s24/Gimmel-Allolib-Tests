@@ -1,5 +1,5 @@
-#include "../utility/TestTemplate.hpp"
-#include "../Gimmel/include/modulation/Detune.hpp"
+#include "Utility/TestTemplate.hpp"
+#include "Gimmel/include/Detune.hpp"
 
 class DetuneDemo : public TestTemplate {
 private:
@@ -58,7 +58,7 @@ public:
 };
 
 int main() {
-	DetuneDemo app(44100, 512, "MacBook Pro Microphone", "MacBook Pro Speakers", "../../Resources/3xGmaj.wav"); // instance of our app 
+	DetuneDemo app(44100, 512, "MacBook Pro Microphone", "MacBook Pro Speakers", "../Resources/3xGmaj.wav"); // instance of our app 
 	app.start();
 	return 0;
 }

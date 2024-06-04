@@ -1,5 +1,5 @@
-#include "../utility/TestTemplate.hpp"
-#include "../Gimmel/include/time-domain/Delay.hpp"
+#include "Utility/TestTemplate.hpp"
+#include "Gimmel/include/Delay.hpp"
 
 class DelayDemo : public TestTemplate {
 private:
@@ -58,7 +58,7 @@ public:
 };
 
 int main() {
-	DelayDemo app(44100, 512, "MacBook Pro Microphone", "MacBook Pro Speakers", "../../Resources/SoftGuitar.wav"); // instance of our app 
+	DelayDemo app(44100, 512, "MacBook Pro Microphone", "Headphones", "../Resources/SoftGuitar.wav"); // instance of our app 
 	app.start();
 	return 0;
 }

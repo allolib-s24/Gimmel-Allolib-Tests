@@ -1,5 +1,5 @@
-#include "../utility/ImpulseResponseTemplate.hpp"
-#include "../Gimmel/include/time-domain/Reverb.hpp"
+#include "Utility/ImpulseResponseTemplate.hpp"
+#include "Gimmel/include/Reverb.hpp"
 
 class IRTest : public IRTemplate  {
 private:
@@ -79,7 +79,7 @@ public:
 };
 
 int main() {
-	IRTest app(48000, 128, "MacBook Pro Microphone", "MacBook Pro Speakers" ,"../../Resources/vocals.wav"); // instance of our app 
+	IRTest app(48000, 128, "MacBook Pro Microphone", "MacBook Pro Speakers", "../Resources/vocals.wav"); // instance of our app 
 	app.start();
 	return 0;
 }
