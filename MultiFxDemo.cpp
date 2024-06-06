@@ -1,9 +1,11 @@
 // Gimmel Includes 
 #include "Utility/TestTemplate.hpp"
+#include "Gimmel/include/Gimmel.hpp"
 #include "Gimmel/include/Detune.hpp"
 #include "Gimmel/include/Reverb.hpp"
 #include "Gimmel/include/Compressor.hpp"
 #include "Gimmel/include/Saturation.hpp"
+#include "Gimmel/include/Tremolo.hpp"
 #include "Gimmel/include/Biquad.hpp"
 
 // Allolib include for GUI
@@ -11,10 +13,15 @@
 
 class MultiFxDemo : public TestTemplate {
 private:
+	giml::Tremolo<float> tremolo;
+	al::ParameterBool tremoloBypass{ "tremoloBypass", "", true, 0.f, 1.f }; // False means the effect is ON
+	al::Parameter speed{ "speed", "", 100.f, 0.1f, 1000.f };
+	al::Parameter depth{ "depth", "", 0.9f, 0.f, 1.f };
+
 	// each effect will have instantiation and params here...
 	giml::Saturation<float> saturation;
 	al::ParameterBool saturationBypass{ "saturationBypass", "", true, 0.f, 1.f }; // False means the effect is ON
-	al::Parameter preAmpGain{"preAmpGain", "", 20.f, -96.f, 30.f};
+	al::Parameter preAmpGain{"preAmpGain", "", 20.f, -96.f, 50.f};
 	al::Parameter drive{"drive", "", 26.f, 1.f, 75.f};
 	al::Parameter volume{"volume", "", -20.f, -96.f, 0.f};
 	
@@ -22,6 +29,12 @@ private:
 	al::ParameterBool filterBypass{ "filterBypass", "", true, 0.f, 1.f }; //False means the effect is ON
 	al::Parameter cutoffFreq{"cutoffFreq", "", 4000.f, 1.f, 20000.f};
 	
+	giml::Chorus<float> chorus;
+	al::ParameterBool chorusBypass{ "chorusBypass", "", true, 0.f, 1.f }; // False means the effect is ON
+	al::Parameter rate{ "rate", "", 1.f, 0.1f, 15.f };
+	al::Parameter chorusDepth{ "depth", "", 20.f, 5.f, 50.f };
+	al::Parameter blend{ "blend", "", 0.5f, 0.f, 1.f };
+
 	giml::Detune<float> detune;
 	al::ParameterBool detuneBypass{ "detuneBypass", "", true, 0.f, 1.f }; // False means the effect is ON
 	al::Parameter pRatio{ "pRatio", "", 0.993f, 0.5f, 2.f };
@@ -32,6 +45,7 @@ private:
 	al::Parameter time{"time", "", 0.02f, 0.f, 1.f}; //Sec
 	al::Parameter space{"space", "", 5.f, 0.f, 50.f}; //ft
 	al::Parameter damping{ "damping", "", 0.5f, 0.f, 0.99f }; //ratio
+	al::Parameter reverbRatio{ "ratio", "", 0.75f, 0.f, 1.f }; //ratio
 
 	giml::Compressor<float> compressor;
 	al::ParameterBool compressorBypass{ "compressorBypass", "", true, 0.f, 1.f }; //False means the effect is ON
@@ -47,7 +61,7 @@ public:
 	std::string deviceIn = "Microphone", std::string deviceOut = "Speaker",
 	std::string inputFilepath = "") :
 	TestTemplate(sampleRate, bufferSize, deviceIn, deviceOut, inputFilepath),
-	detune(sampleRate), reverb(sampleRate), compressor(sampleRate), saturation(sampleRate), filter(sampleRate) {
+	detune(sampleRate), reverb(sampleRate), compressor(sampleRate), saturation(sampleRate), filter(sampleRate), tremolo(sampleRate), chorus(sampleRate) {
 		filter.setType(giml::Biquad<float>::BiquadUseCase::LPF_1st);
 	}
 
@@ -57,6 +71,12 @@ public:
 
 	void onCreate() override {
 		TestTemplate::onCreate(); // Call the base class' create() first 
+
+		// bypass callback 
+		const std::function<void(bool)> tremoloBypassCallback = [&](bool a) { if (!a) { this->tremolo.enable(); }
+		else { this->tremolo.disable(); } };
+		tremoloBypass.registerChangeCallback(tremoloBypassCallback);
+
 		// bypass callback 
 		const std::function<void(bool)> saturationBypassCallback = [&](bool a) { if (!a) { this->saturation.enable(); }
 		else { this->saturation.disable(); } };
@@ -66,6 +86,11 @@ public:
 		const std::function<void(bool)> filterBypassCallback = [&](bool a) { if (!a) { this->filter.enable(); }
 		else { this->filter.disable(); } };
 		filterBypass.registerChangeCallback(filterBypassCallback);
+
+		// bypass callback 
+		const std::function<void(bool)> chorusBypassCallback = [&](bool a) { if (!a) { this->chorus.enable(); }
+		else { this->chorus.disable(); } };
+		chorusBypass.registerChangeCallback(chorusBypassCallback);
 
 		// bypass callback 
 		const std::function<void(bool)> detuneBypassCallback = [&](bool a) { if (!a) { this->detune.enable(); }
@@ -88,9 +113,11 @@ public:
 
 		float out = in;
 		out = saturation.processSample(out);
+		out = tremolo.processSample(out);
 		out = filter.processSample(out);
+		out = chorus.processSample(out);
 		out = (detune.processSample(out) * 0.5) + (out * 0.5);
-		out = reverb.processSample(out) + out;
+		out = reverb.processSample(out)*reverbRatio + out*(1-reverbRatio);
 		out = compressor.processSample(out);
 		return out;
 		
@@ -109,12 +136,18 @@ public:
 		// GUI Setup
 		al::imguiBeginFrame();
 		// Add a Panel for each effect
+		this->DrawPanel("Tremolo", { &tremoloBypass, &speed, &depth });
 		this->DrawPanel("Saturation", {&saturationBypass, &preAmpGain, &drive, &volume});
 		this->DrawPanel("Filter", {&filterBypass, &cutoffFreq});
+		this->DrawPanel("Chorus", {&chorusBypass, &rate, &chorusDepth, &blend});
 		this->DrawPanel("Detune", {&detuneBypass, &pRatio, &wSize});
-		this->DrawPanel("Reverb", {&reverbBypass, &time, &space, &damping});
+		this->DrawPanel("Reverb", {&reverbBypass, &time, &space, &damping, &reverbRatio });
 		this->DrawPanel("Compressor", {&compressorBypass, &thresh, &ratio, &knee, &gain, &attack, &release});
 		al::imguiEndFrame();
+
+		// saturation setters
+		tremolo.setSpeed(speed);
+		tremolo.setDepth(depth);
 
 		// saturation setters
 		saturation.setPreAmpGain(preAmpGain);
@@ -124,13 +157,18 @@ public:
 		// filter setters
 		filter.setParams(cutoffFreq);
 
+		// chorus setters
+		chorus.setBlend(blend);
+		chorus.setDepth(chorusDepth);
+		chorus.setRate(rate);
+
 		// detune setters
 		detune.setPitchRatio(pRatio);
 		detune.setWindowSize(wSize);
 
 		// reverb setters 
 		reverb.setTime(time);
-		reverb.setRoom(space);
+		reverb.setRoom(space, giml::Reverb<float>::RoomType::SPHERE, 0.75f);
 		reverb.setDamping(damping);
 
 		// compressor setters 
@@ -157,7 +195,7 @@ public:
 };
 
 int main() {
-	MultiFxDemo app(44100, 128, "Volt 276", "Headphones"); // instance of our app 
+	MultiFxDemo app(48000, 128, "Microphone", "Speaker"/*, "../Resources/likeAStone.wav"*/); // instance of our app 
 	app.start();
 	return 0;
 }
