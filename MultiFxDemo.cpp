@@ -1,12 +1,6 @@
 // Gimmel Includes 
 #include "Utility/TestTemplate.hpp"
-#include "Gimmel/include/Gimmel.hpp"
-#include "Gimmel/include/Detune.hpp"
-#include "Gimmel/include/Reverb.hpp"
-#include "Gimmel/include/Compressor.hpp"
-#include "Gimmel/include/Saturation.hpp"
-#include "Gimmel/include/Tremolo.hpp"
-#include "Gimmel/include/Biquad.hpp"
+#include "Gimmel/include/Gimmel.hpp" //Includes all effects at once
 
 // Allolib include for GUI
 #include "al/ui/al_ParameterGUI.hpp"
@@ -44,8 +38,11 @@ private:
 	al::ParameterBool reverbBypass{ "reverbBypass", "", true, 0.f, 1.f }; //False means the effect is ON
 	al::Parameter time{"time", "", 0.02f, 0.f, 1.f}; //Sec
 	al::Parameter space{"space", "", 5.f, 0.f, 50.f}; //ft
+	al::Parameter regen{ "regen", "", 0.5f, 0.f, 0.99f }; //ratio
 	al::Parameter damping{ "damping", "", 0.5f, 0.f, 0.99f }; //ratio
-	al::Parameter reverbRatio{ "ratio", "", 0.75f, 0.f, 1.f }; //ratio
+	al::ParameterMenu reverbRoomType{ "roomType", "", 0 };
+	al::Parameter reverbAbsorptionCoefficient{ "absorptionCoefficient", "", 0.75, 0, 1. };
+	al::Parameter reverbRatio{ "wet/dry", "", 0.25f, 0.f, 1.f }; //ratio
 
 	giml::Compressor<float> compressor;
 	al::ParameterBool compressorBypass{ "compressorBypass", "", true, 0.f, 1.f }; //False means the effect is ON
@@ -141,7 +138,8 @@ public:
 		this->DrawPanel("Filter", {&filterBypass, &cutoffFreq});
 		this->DrawPanel("Chorus", {&chorusBypass, &rate, &chorusDepth, &blend});
 		this->DrawPanel("Detune", {&detuneBypass, &pRatio, &wSize});
-		this->DrawPanel("Reverb", {&reverbBypass, &time, &space, &damping, &reverbRatio });
+		this->DrawPanel("Reverb", {&reverbBypass, &time, &space, &regen, &damping, &reverbRoomType, &reverbAbsorptionCoefficient, &reverbRatio});
+		reverbRoomType.setElements({ "sphere", "cube", "square_pyramid", "cylinder" });
 		this->DrawPanel("Compressor", {&compressorBypass, &thresh, &ratio, &knee, &gain, &attack, &release});
 		al::imguiEndFrame();
 
@@ -167,9 +165,23 @@ public:
 		detune.setWindowSize(wSize);
 
 		// reverb setters 
-		reverb.setTime(time);
-		reverb.setRoom(space, giml::Reverb<float>::RoomType::SPHERE, 0.75f);
-		reverb.setDamping(damping);
+		giml::Reverb<float>::RoomType type;
+		switch (reverbRoomType) {
+		case 1: //Cube
+			type = giml::Reverb<float>::RoomType::CUBE;
+			break;
+		case 2: //Square_Pyramid
+			type = giml::Reverb<float>::RoomType::SQUARE_PYRAMID;
+			break;
+		case 3:
+			type = giml::Reverb<float>::RoomType::CYLINDER;
+			break;
+		default:
+		case 0: //Sphere
+			type = giml::Reverb<float>::RoomType::SPHERE;
+			break;
+		}
+		reverb.setParams(time, regen, damping, space, type, reverbAbsorptionCoefficient);
 
 		// compressor setters 
 		compressor.setThresh(thresh);
@@ -195,7 +207,7 @@ public:
 };
 
 int main() {
-	MultiFxDemo app(48000, 128, "Microphone", "Speaker"/*, "../Resources/likeAStone.wav"*/); // instance of our app 
+	MultiFxDemo app(48000, 128, "Microphone", "Speaker", "../Resources/likeAStone.wav"); // instance of our app 
 	app.start();
 	return 0;
 }
