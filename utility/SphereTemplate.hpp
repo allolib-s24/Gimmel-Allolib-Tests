@@ -7,7 +7,7 @@
 #include "al/app/al_App.hpp"
 #include "al/app/al_GUIDomain.hpp"
 
-#include "Oscilloscope.hpp"
+#include "SphereScope.hpp"
 #include "../Gimmel/Test/wav.h"
 
 class TestTemplate : public al::App {
@@ -125,7 +125,6 @@ public:
 	virtual void onDraw(al::Graphics& g) {
 		g.clear(0);
 		g.meshColor();
-		g.camera(al::Viewpoint::IDENTITY); // Ortho [-1:1] x [-1:1]
 		for (Oscilloscope* oscilloscope : oscilloscopes) {
 			g.draw(*oscilloscope);
 		}
