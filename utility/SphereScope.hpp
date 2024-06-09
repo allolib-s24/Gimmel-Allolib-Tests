@@ -6,7 +6,7 @@
 class Oscilloscope : public al::Mesh {
 public:
 	Oscilloscope() = delete; //Remove default constructor because we do not want them instantiating it
-	Oscilloscope(int sampleRate, float speed = 1.f) : bufferSize(sampleRate / speed) {
+	Oscilloscope(int sampleRate, float speed = 0.5f) : bufferSize(sampleRate / speed) {
 		this->buffer.allocate(this->bufferSize);
 		this->primitive(al::Mesh::LINE_STRIP);
 		for (int i = 0; i < bufferSize; i++) {
@@ -19,12 +19,17 @@ public:
 			
 			this->color(al::RGB(1.f)); // color each vertex white
 		}
+
+		this->dTheta = GIML_TWO_PI / (float)this->bufferSize; //increment as we wrap around the sphere
 	}
 
 	void writeSample(float sample) {
 		this->buffer.writeSample(sample);
 	}
+public:
 	void update() {
+		float theta, phi, currentY,
+			cartesianX, cartesianY, cartesianZ;
 		for (int i = 0; i < this->bufferSize; i++) { // loops through all y samples
 			/*
 			For each vertex, we need to set an x,y,z, coordinate for the allosphere
@@ -35,33 +40,39 @@ public:
 			y = rsin(\phi)sin(@)
 			z = rcos(\phi)
 
-			\phi = y/(rsin(@))
 
+			    z
+
+				|
+				|
+				|
+				|
+				|______________ y
+			   /
+			  /
+			 /
+			/
+			x
+
+			alloZ = x;
+			alloX = y;
+			alloY = z;
 			*/
-			// float currentY = this->buffer.readSample((size_t)(this->bufferSize - i));
-			// float theta = M_PI * (i / static_cast<float>(this->bufferSize)) * 2.f - 1.f;
-			// float phi = M_PI_4 - currentY / this->radius;
+			theta = i * this->dTheta;
+			currentY = this->buffer.readSample(this->bufferSize - i);
+			phi = M_PI_2 - currentY / this->radius;
 
-			// this->vertices()[i][0] = this->radius * sinf(phi) * cosf(theta);
-			// this->vertices()[i][1] = this->radius * cosf(phi);
-			// this->vertices()[i][2] = this->radius * sinf(phi) * sinf(theta);
-			float currentY = this->buffer.readSample((size_t)(this->bufferSize - i));
-			this->vertices()[i][1] = currentY;
+			cartesianX = this->radius * sinf(phi) * cosf(theta);
+			cartesianY = this->radius * sinf(phi) * sinf(theta);
+			cartesianZ = this->radius * cosf(phi);
 
-			// spring stuff 
-			float euclidianDistanceFromOrigin = sqrt(powf(position[i][0], 2) + powf(position[i][1], 2) + powf(position[i][2], 2));
-        	// for each vertex, Calculate the spring force
-        	float springForceMagnitude = springConstant * (euclidianDistanceFromOrigin - this->radius);
-        	// for each dimension, Calculate acceleration
-        	for (int dim = 0; dim < 3; dim++) {
-          		float direction = -position[i][dim] / euclidianDistanceFromOrigin;
-          		acceleration[i][dim] += springForceMagnitude * direction;
-        	}
+			this->vertices()[i] = al::Vec3f(cartesianX, cartesianZ, cartesianY);
 
-			// "semi-implicit" Euler integration
-      		velocity[i] += acceleration[i] / mass[i] * dt;
-      		position[i] += velocity[i] * dt;
-			
+			 //this->vertices()[i][0] = cartesianX; //alloX
+			 //this->vertices()[i][1] = cartesianZ; //alloY
+			 //this->vertices()[i][2] = cartesianY; //alloZ
+			 
+			 /*this->vertices()[i][1] = currentY;*/
 		}
 	}
 	void setColorRGB255(int red, int green, int blue) {
@@ -77,7 +88,7 @@ public:
 private:
 	int bufferSize;
 	giml::CircularBuffer<float> buffer;
-	float radius = 1.f;
-	float springConstant = 0.4;
+	float radius = 1.f; //Radius of how big we want to draw it in the sphere
+	float dTheta; //precalculated increment as we wrap around the sphere
 };
 #endif

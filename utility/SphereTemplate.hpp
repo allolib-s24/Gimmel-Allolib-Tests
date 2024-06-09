@@ -107,10 +107,10 @@ public:
 			bufferPower += output;
 			this->outputScope.writeSample(output);
 
-			// overload detector (assuming 2 output channels)
-			if (output > 1.f) {
-				std::cout << "CLIP!" << std::endl;
-			}
+			//// overload detector (assuming 2 output channels)
+			//if (output > 1.f) {
+			//	std::cout << "CLIP!" << std::endl;
+			//}
 
 			// write output to all channels
 			for (int channel = 0; channel < io.channelsOut(); channel++) {
