@@ -181,7 +181,7 @@ public:
 			type = giml::Reverb<float>::RoomType::SPHERE;
 			break;
 		}
-		reverb.setParams(time, regen, damping, space, type, reverbAbsorptionCoefficient);
+		reverb.setParams(time, regen, damping, space, reverbAbsorptionCoefficient, type);
 
 		// compressor setters 
 		compressor.setThresh(thresh);

@@ -181,7 +181,7 @@ public:
 			type = giml::Reverb<float>::RoomType::SPHERE;
 			break;
 		}
-		reverb.setParams(time, regen, damping, space, type, reverbAbsorptionCoefficient);
+		reverb.setParams(time, regen, damping, space, reverbAbsorptionCoefficient, type);
 
 		// compressor setters 
 		compressor.setThresh(thresh);
@@ -207,7 +207,7 @@ public:
 };
 
 int main() {
-	MultiFxDemo app(48000, 128, "MacBook Pro Microphone", "Headphones", "../Resources/likeAStone.wav"); // instance of our app 
+	MultiFxDemo app(48000, 128, "Microphone", "Speaker", "../Resources/likeAStone.wav"); // instance of our app 
 	app.start();
 	return 0;
 }

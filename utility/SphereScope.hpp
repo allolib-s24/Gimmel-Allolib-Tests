@@ -6,21 +6,22 @@
 class Oscilloscope : public al::Mesh {
 public:
 	Oscilloscope() = delete; //Remove default constructor because we do not want them instantiating it
-	Oscilloscope(int sampleRate, float speed = 0.5f) : bufferSize(sampleRate / speed) {
+	Oscilloscope(int sampleRate, float speed = 0.5f, float startAngle = M_PI_4) : bufferSize(sampleRate / speed), startAngle(startAngle) {
 		this->buffer.allocate(this->bufferSize);
+		this->dTheta = GIML_TWO_PI / (float)this->bufferSize; //increment as we wrap around the sphere
 		this->primitive(al::Mesh::LINE_STRIP);
 		for (int i = 0; i < bufferSize; i++) {
 			// initialize vertices
 			this->vertex(
-				radius * cosf(M_PI * (i / static_cast<float>(this->bufferSize)) * 2.f - 1.f), // x
+				radius * cosf(i * this->dTheta - this->startAngle), // x
 				0, // y
-				radius * sinf(M_PI * (i / static_cast<float>(this->bufferSize)) * 2.f - 1.f) // z
+				radius * sinf(i * this->dTheta - this->startAngle) // z
 			);
 			
 			this->color(al::RGB(1.f)); // color each vertex white
 		}
 
-		this->dTheta = GIML_TWO_PI / (float)this->bufferSize; //increment as we wrap around the sphere
+		
 	}
 
 	void writeSample(float sample) {
@@ -58,7 +59,7 @@ public:
 			alloX = y;
 			alloY = z;
 			*/
-			theta = i * this->dTheta;
+			theta = i * this->dTheta - this->startAngle;
 			currentY = this->buffer.readSample(this->bufferSize - i);
 			phi = M_PI_2 - currentY / this->radius;
 
@@ -90,5 +91,6 @@ private:
 	giml::CircularBuffer<float> buffer;
 	float radius = 1.f; //Radius of how big we want to draw it in the sphere
 	float dTheta; //precalculated increment as we wrap around the sphere
+	float startAngle; //offset from 0 radians on unit circle where new audio should come from and old audio should leave
 };
 #endif
