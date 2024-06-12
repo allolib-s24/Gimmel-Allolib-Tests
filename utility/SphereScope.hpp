@@ -89,7 +89,7 @@ public:
 private:
 	int bufferSize;
 	giml::CircularBuffer<float> buffer;
-	float radius = 1.f; //Radius of how big we want to draw it in the sphere
+	float radius = 0.5f; //Radius of how big we want to draw it in the sphere
 	float dTheta; //precalculated increment as we wrap around the sphere
 	float startAngle; //offset from 0 radians on unit circle where new audio should come from and old audio should leave
 };
