@@ -29,10 +29,13 @@ private:
 	al::Parameter chorusDepth{ "depth", "", 10.f, 5.f, 50.f };
 	al::Parameter blend{ "blend", "", 0.5f, 0.f, 1.f };
 
-	giml::Detune<float> detune;
+
+	// vector of detune
+	std::vector<giml::Detune<float>> detuneBank; // <- initialize vector of detune
 	al::ParameterBool detuneBypass{ "detuneBypass", "", true, 0.f, 1.f }; // False means the effect is ON
-	al::Parameter pRatio{ "pRatio", "", 0.993f, 0.5f, 2.f };
+	al::Parameter pRatio{ "pRatio", "", 0.007f, 0.0f, 1.f };
 	al::Parameter wSize{ "wSize", "", 22.f, 5.f, 50.f };
+
 
 	giml::Reverb<float> reverb;
 	al::ParameterBool reverbBypass{ "reverbBypass", "", true, 0.f, 1.f }; //False means the effect is ON
@@ -57,9 +60,12 @@ public:
 	AlloFx(int sampleRate = 44100, int bufferSize = 256,
 	std::string deviceIn = "Microphone", std::string deviceOut = "Speaker",
 	std::string inputFilepath = "") :
-	SphereTemplate(sampleRate, bufferSize, deviceIn, deviceOut, inputFilepath),
-	detune(sampleRate), reverb(sampleRate), compressor(sampleRate), saturation(sampleRate), filter(sampleRate), tremolo(sampleRate), chorus(sampleRate) {
+	SphereTemplate(sampleRate, bufferSize, deviceIn, deviceOut, inputFilepath), reverb(sampleRate), 
+	compressor(sampleRate), saturation(sampleRate), filter(sampleRate), tremolo(sampleRate), chorus(sampleRate) {
 		filter.setType(giml::Biquad<float>::BiquadUseCase::LPF_1st);
+		for (int i = 0; i < static_cast<int>(audioIO().channelsOut()); i++) {
+			detuneBank.push_back(giml::Detune<float>(sampleRate)); // <- constructor goes here? 
+		}
 	}
 
 	void onInit() override {
@@ -69,7 +75,7 @@ public:
 		quit();
 		}
 	if (isPrimary()) {
-		al::imguiInit(); // GUI init
+		al::imguiInit(); // GUI init	
 	}
 	}
 
@@ -96,10 +102,22 @@ public:
 		else { this->chorus.disable(); } };
 		chorusBypass.registerChangeCallback(chorusBypassCallback);
 
-		// bypass callback 
-		const std::function<void(bool)> detuneBypassCallback = [&](bool a) { if (!a) { this->detune.enable(); }
-		else { this->detune.disable(); } };
+
+		// detune bypass callback 
+		const std::function<void(bool)> detuneBypassCallback = [&](bool a) { if (!a) { 
+			//this->detune.enable(); 
+			for (int i = 0; i < static_cast<int>(audioIO().channelsOut()); i++) {
+				detuneBank[i].enable(); // <- constructor goes where? 
+			}
+		}
+		else { 
+			//this->detune.disable(); 
+			for (int i = 0; i < static_cast<int>(audioIO().channelsOut()); i++) {
+				detuneBank[i].disable(); // <- constructor goes where? 
+			}
+		} };
 		detuneBypass.registerChangeCallback(detuneBypassCallback);
+
 
 		// bypass callback 
 		const std::function<void(bool)> reverbBypassCallback = [&](bool a) { if (!a) { this->reverb.enable(); }
@@ -119,7 +137,7 @@ public:
 		out = saturation.processSample(out);
 		out = filter.processSample(out);
 		out = chorus.processSample(out);
-		out = (detune.processSample(out) * 0.5) + (out * 0.5);
+		//out = (detune.processSample(out) * 0.5) + (out * 0.5);
 		out = tremolo.processSample(out);
 		out = reverb.processSample(out)*reverbRatio + out*(1-reverbRatio);
 		out = compressor.processSample(out);
@@ -129,11 +147,22 @@ public:
 		Saturation 
 		Lo-Pass
 		Chorus
-		Detune
 		Tremolo
 		Reverb
 		Compressor
 		*/
+	}
+
+	void onSound(al::AudioIOData& io) override {
+	if (isPrimary()) {
+		SphereTemplate::onSound(io);
+		for (int sample = 0; sample < static_cast<int>(io.framesPerBuffer()); sample++) {
+			// pitchshift outputs
+			for (int channel = 0; channel < io.channelsOut(); channel++) {
+				io.out(channel, sample) = this->detuneBank[channel].processSample(io.out(channel, sample));
+			}
+		}
+	}
 	}
 
 	void onAnimate(double dt) override { // called ~60fps
@@ -170,8 +199,18 @@ public:
 		chorus.setRate(rate);
 
 		// detune setters
-		detune.setPitchRatio(pRatio);
-		detune.setWindowSize(wSize);
+		for (int i = 0; i < static_cast<int>(audioIO().channelsOut()); i++) {
+			if (i % 2 == 0) {
+				// float rat = 1 - ( pRatio / (i + 1) );
+				// detuneBank[i].setPitchRatio(rat); // <- goes here?
+				// std::cout << "pRatio 0: " << rat << std::endl;
+				detuneBank[i].setPitchRatio(1 - ( pRatio / (i + 1) )); // <- goes here?
+			}
+			else {
+				detuneBank[i].setPitchRatio(1 + ( pRatio / i )); // <- goes here?
+			}
+			detuneBank[i].setWindowSize(wSize);
+		}
 
 		// reverb setters 
 		giml::Reverb<float>::RoomType type;
