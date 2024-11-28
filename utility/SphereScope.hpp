@@ -8,7 +8,7 @@ public:
 	Oscilloscope() = delete; //Remove default constructor because we do not want them instantiating it
 	Oscilloscope(int sampleRate, float speed = 0.5f, float startAngle = M_PI_4) : bufferSize(sampleRate / speed), startAngle(startAngle) {
 		this->buffer.allocate(this->bufferSize);
-		this->dTheta = GIML_TWO_PI / (float)this->bufferSize; //increment as we wrap around the sphere
+		this->dTheta = M_2PI / (float)this->bufferSize; //increment as we wrap around the sphere
 		this->primitive(al::Mesh::LINE_STRIP);
 		for (int i = 0; i < bufferSize; i++) {
 			// initialize vertices
